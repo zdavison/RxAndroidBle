@@ -48,10 +48,128 @@
 <h2>
 <a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
 
-<p>TBD x</p>
+<h3>
+<a id="obtaining-the-client" class="anchor" href="#obtaining-the-client" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Obtaining the client</h3>
+
+<p>It's your job to maintain single instance of the client. You can use singleton, scopped <a href="http://google.github.io/dagger/">Dagger</a> component or whatever else you want.</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-smi">RxBleClient</span> rxBleClient <span class="pl-k">=</span> <span class="pl-smi">RxBleClient</span><span class="pl-k">.</span>getInstance(context);</pre></div>
+
+<h3>
+<a id="device-discovery" class="anchor" href="#device-discovery" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Device discovery</h3>
+
+<p>Scanning devices in the area is simple as that:</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-smi">Subscription</span> scanSubscription <span class="pl-k">=</span> rxBleClient<span class="pl-k">.</span>scanBleDevices()
+    .subscribe(rxBleScanResult <span class="pl-k">-</span><span class="pl-k">&gt;</span> {
+        <span class="pl-c">// Process scan result here.</span>
+    });
+
+<span class="pl-c">// When done, just unsubscribe.</span>
+scanSubscription<span class="pl-k">.</span>unsubscribe();</pre></div>
+
+<h3>
+<a id="connection" class="anchor" href="#connection" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Connection</h3>
+
+<p>For further BLE interactions the connection is required.</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-smi">String</span> macAddress <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>AA:BB:CC:DD:EE:FF<span class="pl-pds">"</span></span>;
+<span class="pl-smi">RxBleDevice</span> device <span class="pl-k">=</span> rxBleClient<span class="pl-k">.</span>getBleDevice(macAddress);
+
+<span class="pl-smi">Subscription</span> subscription <span class="pl-k">=</span> device<span class="pl-k">.</span>establishConnection(context, <span class="pl-c1">false</span>) <span class="pl-c">// &lt;-- autoConnect flag</span>
+    .subscribe(rxBleConnection <span class="pl-k">-</span><span class="pl-k">&gt;</span> {
+        <span class="pl-c">// All GATT operations are done through the rxBleConnection.</span>
+    });
+
+<span class="pl-c">// When done... unsubscribe and forget about connection teardown :)</span>
+subscription<span class="pl-k">.</span>unsubscribe();</pre></div>
+
+<h3>
+<a id="read--write-operations" class="anchor" href="#read--write-operations" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Read / write operations</h3>
+
+<h4>
+<a id="read" class="anchor" href="#read" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Read</h4>
+
+<div class="highlight highlight-source-java"><pre>device<span class="pl-k">.</span>establishConnection(context, <span class="pl-c1">false</span>)
+    .flatMap(rxBleConnection <span class="pl-k">-</span><span class="pl-k">&gt;</span> rxBleConnection<span class="pl-k">.</span>readCharacteristic(characteristicUUID))
+    .subscribe(characteristicValue <span class="pl-k">-</span><span class="pl-k">&gt;</span> {
+        <span class="pl-c">// Read characteristic value.</span>
+    });
+</pre></div>
+
+<h4>
+<a id="write" class="anchor" href="#write" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Write</h4>
+
+<div class="highlight highlight-source-java"><pre>device<span class="pl-k">.</span>establishConnection(context, <span class="pl-c1">false</span>)
+    .flatMap(rxBleConnection <span class="pl-k">-</span><span class="pl-k">&gt;</span> rxBleConnection<span class="pl-k">.</span>writeCharacteristic(characteristicUUID, bytesToWrite))
+    .subscribe(characteristicValue <span class="pl-k">-</span><span class="pl-k">&gt;</span> {
+        <span class="pl-c">// Characteristic value confirmed.</span>
+    });</pre></div>
+
+<h4>
+<a id="multiple-reads" class="anchor" href="#multiple-reads" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Multiple reads</h4>
+
+<div class="highlight highlight-source-java"><pre> device<span class="pl-k">.</span>establishConnection(context, <span class="pl-c1">false</span>)
+    .flatMap(rxBleConnection <span class="pl-k">-</span><span class="pl-k">&gt;</span> <span class="pl-smi">Observable</span><span class="pl-k">.</span>combineLatest(
+        rxBleConnection<span class="pl-k">.</span>readCharacteristic(firstUUID),
+        rxBleConnection<span class="pl-k">.</span>readCharacteristic(secondUUID),
+        <span class="pl-smi">YourModelCombiningTwoValues</span><span class="pl-k">::</span><span class="pl-k">new</span>
+    ))
+    .subscribe(model <span class="pl-k">-</span><span class="pl-k">&gt;</span> {
+        <span class="pl-c">// Process your model.</span>
+    });</pre></div>
+
+<h4>
+<a id="read-and-write-combined" class="anchor" href="#read-and-write-combined" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Read and write combined</h4>
+
+<div class="highlight highlight-source-java"><pre> device<span class="pl-k">.</span>establishConnection(context, <span class="pl-c1">false</span>)
+    .flatMap(rxBleConnection <span class="pl-k">-</span><span class="pl-k">&gt;</span> rxBleConnection<span class="pl-k">.</span>readCharacteristic(characteristicUuid)
+        .doOnNext(bytes <span class="pl-k">-</span><span class="pl-k">&gt;</span> {
+            <span class="pl-c">// Process read data.</span>
+        })
+        .flatMap(bytes <span class="pl-k">-</span><span class="pl-k">&gt;</span> rxBleConnection<span class="pl-k">.</span>writeCharacteristic(characteristicUuid, bytesToWrite))
+    .subscribe(writeBytes <span class="pl-k">-</span><span class="pl-k">&gt;</span> {
+        <span class="pl-c">// Written data.</span>
+    });</pre></div>
+
+<h3>
+<a id="change-notifications" class="anchor" href="#change-notifications" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Change notifications</h3>
+
+<div class="highlight highlight-source-java"><pre> device<span class="pl-k">.</span>establishConnection(context, <span class="pl-c1">false</span>)
+    .flatMap(rxBleConnection <span class="pl-k">-</span><span class="pl-k">&gt;</span> rxBleConnection<span class="pl-k">.</span>setupNotification(characteristicUuid))
+    .doOnNext(notificationObservable <span class="pl-k">-</span><span class="pl-k">&gt;</span> {
+        <span class="pl-c">// Notification has been set up</span>
+    })
+    .flatMap(notificationObservable <span class="pl-k">-</span><span class="pl-k">&gt;</span> notificationObservable) <span class="pl-c">// &lt;-- Notification has been set up, now observe value changes.</span>
+    .subscribe(bytes <span class="pl-k">-</span><span class="pl-k">&gt;</span> {
+        <span class="pl-c">// Given characteristic has been changes, here is the value.</span>
+    });
+</pre></div>
+
+<h3>
+<a id="observing-connection-state" class="anchor" href="#observing-connection-state" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Observing connection state</h3>
+
+<p>If you want to observe changes in device connection state just subscribe like below. On subscription you will receive the most current state instantly.</p>
+
+<div class="highlight highlight-source-java"><pre>device<span class="pl-k">.</span>observeConnectionStateChanges()
+    .subscribe(connectionState <span class="pl-k">-</span><span class="pl-k">&gt;</span> {
+        <span class="pl-c">// Process your way.</span>
+    });</pre></div>
+
+<h3>
+<a id="logging" class="anchor" href="#logging" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Logging</h3>
+
+<p>For connection debugging you can use extended logging</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-smi">RxBleClient</span><span class="pl-k">.</span>setLogLevel(<span class="pl-smi">RxBleLog</span><span class="pl-c1"><span class="pl-k">.</span>DEBUG</span>);</pre></div>
+
+<h3>
+<a id="error-handling" class="anchor" href="#error-handling" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Error handling</h3>
+
+<p>Every error you may encounter is proveided via onError callback. Each public method has JavaDoc explaining possible errors.</p>
 
 <h2>
-<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Examples</h2>
+<a id="more-examples" class="anchor" href="#more-examples" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>More examples</h2>
 
 <p>Complete usage examples are located in <code>/sample</code> <a href="https://github.com/Polidea/RxAndroidBle/tree/master/sample/src/main/java/com/polidea/rxandroidble/sample">GitHub repo</a>.</p>
 
