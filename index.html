@@ -88,6 +88,15 @@ scanSubscription<span class="pl-k">.</span>unsubscribe();</pre></div>
 <span class="pl-c">// When done... unsubscribe and forget about connection teardown :)</span>
 subscription<span class="pl-k">.</span>unsubscribe();</pre></div>
 
+<h4>
+<a id="auto-connect" class="anchor" href="#auto-connect" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Auto connect</h4>
+
+<p>Auto connect concept may be misleading at first glance. Without the autoconnect flag the connection will end up with an error if a BLE device is not advertising when the <code>RxBleDevice#establishConnection</code> method is called. From platform to platform timeout after which the error is emitted differs, but in general it is rather tens of seconds than single seconds.</p>
+
+<p>Setting the auto connect flag allows you to wait until the BLE device becomes discoverable. The <code>RxBleConnection</code> instance won't be emited until the connection is fully set up. It also handles acquiring wakelockes, so it's safe to assume that your Android device will be woken up after the connection has been established.</p>
+
+<p>Be careful not to overuse the autoconnect flag. On the other side it has negative impact on the connection initialization speed. Scanning window and interval is lowered as it is optimized for background use and depending on Bluetooth parameters it may take more time to establish the connection.</p>
+
 <h3>
 <a id="read--write-operations" class="anchor" href="#read--write-operations" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Read / write operations</h3>
 
@@ -205,7 +214,7 @@ subscription<span class="pl-k">.</span>unsubscribe();</pre></div>
 
 <p>If you would like to contribute code you can do so through GitHub by forking the repository and sending a pull request.</p>
 
-<p>When submitting code, please make every effort to follow existing conventions and style in order to keep the code as readable as possible. Please also make sure your code compiles by running <code>gradle clean checkstyle test</code>.</p>
+<p>When submitting code, please make every effort to follow existing conventions and style in order to keep the code as readable as possible. Please also make sure your code compiles by running <code>./gradlew clean checkstyle test</code>.</p>
 
 <h2>
 <a id="maintainers" class="anchor" href="#maintainers" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Maintainers</h2>
