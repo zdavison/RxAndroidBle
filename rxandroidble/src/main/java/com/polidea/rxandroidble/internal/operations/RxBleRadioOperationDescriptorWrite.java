@@ -29,7 +29,7 @@ public class RxBleRadioOperationDescriptorWrite extends RxBleRadioOperation<byte
     }
 
     @Override
-    public void run() {
+    public void runOperation() {
         //noinspection Convert2MethodRef
         final Subscription subscription = rxBleGattCallback
                 .getOnDescriptorWrite()

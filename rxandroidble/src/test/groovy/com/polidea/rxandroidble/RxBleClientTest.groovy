@@ -329,10 +329,10 @@ class RxBleClientTest extends Specification {
         bleAdapterWrapperSpy.startLeScan(_) >> true
         RxBleRadioOperationScan scanOperation = new RxBleRadioOperationScan(null, bleAdapterWrapperSpy, null) {
             @Override
-            synchronized void run() {
+            synchronized void runOperation() {
                 // simulate delay when starting scan
                 Thread.sleep(100)
-                super.run()
+                super.runOperation()
             }
         }
         Thread stopScanThread = new Thread() {

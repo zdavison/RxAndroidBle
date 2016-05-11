@@ -18,11 +18,26 @@ import rx.subjects.ReplaySubject;
 public abstract class RxBleRadioOperation<T> implements Runnable, Comparable<RxBleRadioOperation> {
 
     /**
+     * The class representing a priority with which an RxBleRadioOperation should be executed.
+     * Used in @Override definedPriority()
+     */
+    public static class Priority {
+
+        public static final Priority HIGH = new Priority(100);
+        public static final Priority NORMAL = new Priority(50);
+        public static final Priority LOW = new Priority(0);
+        private final int priority;
+
+        private Priority(int priority) {
+
+            this.priority = priority;
+        }
+    }
+    /**
      * Operation may start emission even before anyone is looking for it's values. It is safe to replay here as this subject is subscribed
      * only once, after queueing.
      */
     private ReplaySubject<T> replaySubject = ReplaySubject.create();
-
     private Semaphore radioBlockingSemaphore;
 
     /**
@@ -33,6 +48,46 @@ public abstract class RxBleRadioOperation<T> implements Runnable, Comparable<RxB
      */
     public Observable<T> asObservable() {
         return replaySubject;
+    }
+
+    /**
+     * The function for determining which position in Bluetooth Radio's Priority Blocking Queue
+     * this operation should take
+     *
+     * @param another another operation
+     * @return the comparison result
+     */
+    @Override
+    public int compareTo(@NonNull RxBleRadioOperation another) {
+        return another.definedPriority().priority - definedPriority().priority;
+    }
+
+    @Override
+    public final void run() {
+
+        try {
+            runOperation();
+        } catch (Throwable throwable) {
+            onError(throwable);
+        }
+    }
+
+    /**
+     * The setter for the semaphore which needs to be released for the Bluetooth Radio to continue the work
+     *
+     * @param radioBlockingSemaphore the semaphore
+     */
+    public void setRadioBlockingSemaphore(Semaphore radioBlockingSemaphore) {
+        this.radioBlockingSemaphore = radioBlockingSemaphore;
+    }
+
+    /**
+     * A function returning the priority of this operation
+     *
+     * @return the priority of this operation
+     */
+    protected Priority definedPriority() {
+        return Priority.NORMAL;
     }
 
     /**
@@ -58,15 +113,6 @@ public abstract class RxBleRadioOperation<T> implements Runnable, Comparable<RxB
     }
 
     /**
-     * A convenience method for calling the Subscriber's onNext()
-     *
-     * @param next the next value
-     */
-    protected final void onNext(T next) {
-        replaySubject.onNext(next);
-    }
-
-    /**
      * A convenience method for calling the Subscriber's onCompleted()
      */
     protected final void onCompleted() {
@@ -85,12 +131,12 @@ public abstract class RxBleRadioOperation<T> implements Runnable, Comparable<RxB
     }
 
     /**
-     * The setter for the semaphore which needs to be released for the Bluetooth Radio to continue the work
+     * A convenience method for calling the Subscriber's onNext()
      *
-     * @param radioBlockingSemaphore the semaphore
+     * @param next the next value
      */
-    public void setRadioBlockingSemaphore(Semaphore radioBlockingSemaphore) {
-        this.radioBlockingSemaphore = radioBlockingSemaphore;
+    protected final void onNext(T next) {
+        replaySubject.onNext(next);
     }
 
     /**
@@ -102,40 +148,8 @@ public abstract class RxBleRadioOperation<T> implements Runnable, Comparable<RxB
     }
 
     /**
-     * A function returning the priority of this operation
-     *
-     * @return the priority of this operation
+     * This method will be overriden in concrete operation implementations and
+     * will contain specific operation logic.
      */
-    protected Priority definedPriority() {
-        return Priority.NORMAL;
-    }
-
-    /**
-     * The function for determining which position in Bluetooth Radio's Priority Blocking Queue
-     * this operation should take
-     *
-     * @param another another operation
-     * @return the comparison result
-     */
-    @Override
-    public int compareTo(@NonNull RxBleRadioOperation another) {
-        return another.definedPriority().priority - definedPriority().priority;
-    }
-
-    /**
-     * The class representing a priority with which an RxBleRadioOperation should be executed.
-     * Used in @Override definedPriority()
-     */
-    public static class Priority {
-
-        public static final Priority HIGH = new Priority(100);
-        public static final Priority NORMAL = new Priority(50);
-        public static final Priority LOW = new Priority(0);
-        private final int priority;
-
-        private Priority(int priority) {
-
-            this.priority = priority;
-        }
-    }
+    protected abstract void runOperation();
 }

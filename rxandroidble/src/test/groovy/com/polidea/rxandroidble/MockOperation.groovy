@@ -26,7 +26,7 @@ public class MockOperation extends RxBleRadioOperation<Object> {
     }
 
     @Override
-    void run() {
+    void runOperation() {
         executionCount++
         lastExecutedOnThread = Thread.currentThread().getName()
         closure?.call(this)

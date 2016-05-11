@@ -32,7 +32,7 @@ public class RxBleRadioOperationScan extends RxBleRadioOperation<RxBleInternalSc
     }
 
     @Override
-    public synchronized void run() {
+    public synchronized void runOperation() {
 
         try {
 
