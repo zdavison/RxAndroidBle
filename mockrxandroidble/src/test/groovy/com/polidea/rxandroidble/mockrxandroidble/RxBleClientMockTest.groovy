@@ -1,6 +1,7 @@
 package com.polidea.rxandroidble.mockrxandroidble
 
 import android.os.Build
+import com.polidea.rxandroidble.exceptions.BleConflictingNotificationAlreadySetException
 import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robospock.RoboSpecification
@@ -18,6 +19,7 @@ public class RxBleClientMockTest extends RoboSpecification {
     def descriptorData = "Config".getBytes();
     def rxBleClient
     def PublishSubject characteristicNotificationSubject = PublishSubject.create()
+    def PublishSubject characteristicIndicationSubject = PublishSubject.create()
 
     def setup() {
         rxBleClient = new RxBleClientMock.Builder()
@@ -28,6 +30,7 @@ public class RxBleClientMockTest extends RoboSpecification {
                         .scanRecord("ScanRecord".getBytes())
                         .rssi(42)
                         .notificationSource(characteristicNotifiedUUID, characteristicNotificationSubject)
+                        .indicationSource(characteristicNotifiedUUID, characteristicIndicationSubject)
                         .addService(
                         serviceUUID,
                         new RxBleClientMock.CharacteristicsBuilder()
@@ -154,5 +157,62 @@ public class RxBleClientMockTest extends RoboSpecification {
 
         then:
         testSubscriber.assertValue("NotificationData")
+    }
+
+    def "should return indication data"() {
+        given:
+        def testSubscriber = TestSubscriber.create()
+        rxBleClient.scanBleDevices(null)
+                .take(1)
+                .map { scanResult -> scanResult.getBleDevice() }
+                .flatMap { rxBleDevice -> rxBleDevice.establishConnection(RuntimeEnvironment.application, false) }
+                .flatMap { rxBleConnection -> rxBleConnection.setupIndication(characteristicNotifiedUUID) }
+                .subscribe { obs -> obs.map { data -> new String(data) } subscribe(testSubscriber) }
+
+        when:
+        characteristicIndicationSubject.onNext("IndicationData".getBytes())
+
+        then:
+        testSubscriber.assertValue("IndicationData")
+    }
+
+    def "should throw exception when trying to setup notification after indication was set before for the same characteristic"() {
+        given:
+        def testSubscriber = TestSubscriber.create()
+        def observable = rxBleClient.scanBleDevices(null)
+                .take(1)
+                .map { scanResult -> scanResult.getBleDevice() }
+                .flatMap { rxBleDevice -> rxBleDevice.establishConnection(RuntimeEnvironment.application, false) }
+                .flatMap { rxBleConnection ->
+                    rxBleConnection.setupIndication(characteristicNotifiedUUID)
+                    rxBleConnection.setupNotification(characteristicNotifiedUUID)
+                }
+
+        when:
+        observable.subscribe(testSubscriber)
+
+        then:
+        testSubscriber.assertError(BleConflictingNotificationAlreadySetException)
+        (testSubscriber.getOnErrorEvents().get(0) as BleConflictingNotificationAlreadySetException).indicationAlreadySet()
+    }
+
+    def "should throw exception when trying to setup indication after notification was set before for the same characteristic"() {
+        given:
+        def testSubscriber = TestSubscriber.create()
+        def observable = rxBleClient.scanBleDevices(null)
+                .take(1)
+                .map { scanResult -> scanResult.getBleDevice() }
+                .flatMap { rxBleDevice -> rxBleDevice.establishConnection(RuntimeEnvironment.application, false) }
+                .flatMap { rxBleConnection ->
+            rxBleConnection.setupNotification(characteristicNotifiedUUID)
+            rxBleConnection.setupIndication(characteristicNotifiedUUID)
+        }
+
+        when:
+        observable.subscribe(testSubscriber)
+
+        then:
+        testSubscriber.assertError(BleConflictingNotificationAlreadySetException)
+        (testSubscriber.getOnErrorEvents().get(0) as BleConflictingNotificationAlreadySetException).notificationAlreadySet()
     }
 }

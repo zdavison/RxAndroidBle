@@ -38,12 +38,14 @@ class RxBleDeviceMock implements RxBleDevice {
                            byte[] scanRecord,
                            Integer rssi,
                            RxBleDeviceServices rxBleDeviceServices,
-                           Map<UUID, Observable<byte[]>> characteristicNotificationSources) {
+                           Map<UUID, Observable<byte[]>> characteristicNotificationSources,
+                           Map<UUID, Observable<byte[]>> characteristicIndicationSources) {
         this.name = name;
         this.macAddress = macAddress;
         this.rxBleConnection = new RxBleConnectionMock(rxBleDeviceServices,
                 rssi,
-                characteristicNotificationSources);
+                characteristicNotificationSources,
+                characteristicIndicationSources);
         this.rssi = rssi;
         this.scanRecord = scanRecord;
         this.advertisedUUIDs = new ArrayList<>();

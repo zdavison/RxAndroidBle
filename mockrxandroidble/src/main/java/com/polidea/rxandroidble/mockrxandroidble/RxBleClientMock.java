@@ -62,6 +62,7 @@ public class RxBleClientMock extends RxBleClient {
         private byte[] scanRecord;
         private RxBleDeviceServices rxBleDeviceServices;
         private Map<UUID, Observable<byte[]>> characteristicNotificationSources;
+        private Map<UUID, Observable<byte[]>> characteristicIndicationSources;
 
         /**
          * Build a new {@link RxBleDevice}.
@@ -73,6 +74,7 @@ public class RxBleClientMock extends RxBleClient {
         public DeviceBuilder() {
             this.rxBleDeviceServices = new RxBleDeviceServices(new ArrayList<>());
             this.characteristicNotificationSources = new HashMap<>();
+            this.characteristicIndicationSources = new HashMap<>();
         }
 
         /**
@@ -103,7 +105,8 @@ public class RxBleClientMock extends RxBleClient {
                     scanRecord,
                     rssi,
                     rxBleDeviceServices,
-                    characteristicNotificationSources);
+                    characteristicNotificationSources,
+                    characteristicIndicationSources);
 
             for (BluetoothGattService service : rxBleDeviceServices.getBluetoothGattServices()) {
                 rxBleDeviceMock.addAdvertisedUUID(service.getUuid());
@@ -136,6 +139,18 @@ public class RxBleClientMock extends RxBleClient {
          */
         public DeviceBuilder notificationSource(@NonNull UUID characteristicUUID, @NonNull Observable<byte[]> sourceObservable) {
             characteristicNotificationSources.put(characteristicUUID, sourceObservable);
+            return this;
+        }
+
+        /**
+         * Set an {@link Observable} that will be used to fire characteristic change indications. It will be subscribed to after
+         * a call to {@link com.polidea.rxandroidble.RxBleConnection#setupIndication(UUID)}. Calling this method is not required.
+         *
+         * @param characteristicUUID UUID of the characteristic that will be observed for indications
+         * @param sourceObservable   Observable that will be subscribed to in order to receive characteristic change indications
+         */
+        public DeviceBuilder indicationSource(@NonNull UUID characteristicUUID, @NonNull Observable<byte[]> sourceObservable) {
+            characteristicIndicationSources.put(characteristicUUID, sourceObservable);
             return this;
         }
 
