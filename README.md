@@ -140,7 +140,7 @@ Complete usage examples are located in `/sample` [GitHub repo](https://github.co
 ### Gradle
 
 ```java
-compile "com.polidea.rxandroidble:rxandroidble:1.0.1"
+compile "com.polidea.rxandroidble:rxandroidble:1.0.2"
 ```
 ### Maven
 
@@ -148,7 +148,7 @@ compile "com.polidea.rxandroidble:rxandroidble:1.0.1"
 <dependency>
   <groupId>com.polidea.rxandroidble</groupId>
   <artifactId>rxandroidble</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
   <type>aar</type>
 </dependency>
 ```
@@ -166,6 +166,7 @@ When submitting code, please make every effort to follow existing conventions an
 
 ## Contributors, thank you!
 * Michał Zieliński (michal.zielinski@polidea.com)
+* Fracturedpsyche (https://github.com/fracturedpsyche)
 
 ## License
 

@@ -29,11 +29,12 @@ android {
 }
 
 dependencies {
+    compile project(path: ':rxandroidble')
+    //compile 'com.polidea.rxandroidble:rxandroidble:1.0.2'
 
     // Test dependencies
     testCompile rootProject.ext.libs.junit
     testCompile rootProject.ext.libs.groovy
     testCompile rootProject.ext.libs.spock
     testCompile rootProject.ext.libs.robospock
-    compile project(path: ':rxandroidble')
 }
