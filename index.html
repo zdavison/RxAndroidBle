@@ -50,6 +50,11 @@
 <p>Read the official announcement at <a href="https://www.polidea.com/blog/RXAndroidBLE/">Polidea Blog</a>.</p>
 
 <h2>
+<a id="rxandroidble--mobile-central-europe-2016" class="anchor" href="#rxandroidble--mobile-central-europe-2016" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>RxAndroidBLE @ Mobile Central Europe 2016</h2>
+
+<p><a href="https://www.youtube.com/watch?v=0aKfUGCxUDM"><img src="https://img.youtube.com/vi/0aKfUGCxUDM/0.jpg" alt="RxAndroidBLE @ Mobile Central Europe 2016"></a></p>
+
+<h2>
 <a id="usage" class="anchor" href="#usage" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Usage</h2>
 
 <h3>
@@ -140,7 +145,7 @@ subscription<span class="pl-k">.</span>unsubscribe();</pre></div>
         .doOnNext(bytes <span class="pl-k">-</span><span class="pl-k">&gt;</span> {
             <span class="pl-c">// Process read data.</span>
         })
-        .flatMap(bytes <span class="pl-k">-</span><span class="pl-k">&gt;</span> rxBleConnection<span class="pl-k">.</span>writeCharacteristic(characteristicUuid, bytesToWrite))
+        .flatMap(bytes <span class="pl-k">-</span><span class="pl-k">&gt;</span> rxBleConnection<span class="pl-k">.</span>writeCharacteristic(characteristicUuid, bytesToWrite)))
     .subscribe(writeBytes <span class="pl-k">-</span><span class="pl-k">&gt;</span> {
         <span class="pl-c">// Written data.</span>
     });</pre></div>
@@ -192,7 +197,7 @@ subscription<span class="pl-k">.</span>unsubscribe();</pre></div>
 <h3>
 <a id="gradle" class="anchor" href="#gradle" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Gradle</h3>
 
-<div class="highlight highlight-source-java"><pre>compile <span class="pl-s"><span class="pl-pds">"</span>com.polidea.rxandroidble:rxandroidble:1.0.1<span class="pl-pds">"</span></span></pre></div>
+<div class="highlight highlight-source-java"><pre>compile <span class="pl-s"><span class="pl-pds">"</span>com.polidea.rxandroidble:rxandroidble:1.0.2<span class="pl-pds">"</span></span></pre></div>
 
 <h3>
 <a id="maven" class="anchor" href="#maven" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Maven</h3>
@@ -200,7 +205,7 @@ subscription<span class="pl-k">.</span>unsubscribe();</pre></div>
 <div class="highlight highlight-text-xml"><pre>&lt;<span class="pl-ent">dependency</span>&gt;
   &lt;<span class="pl-ent">groupId</span>&gt;com.polidea.rxandroidble&lt;/<span class="pl-ent">groupId</span>&gt;
   &lt;<span class="pl-ent">artifactId</span>&gt;rxandroidble&lt;/<span class="pl-ent">artifactId</span>&gt;
-  &lt;<span class="pl-ent">version</span>&gt;1.0.1&lt;/<span class="pl-ent">version</span>&gt;
+  &lt;<span class="pl-ent">version</span>&gt;1.0.2&lt;/<span class="pl-ent">version</span>&gt;
   &lt;<span class="pl-ent">type</span>&gt;aar&lt;/<span class="pl-ent">type</span>&gt;
 &lt;/<span class="pl-ent">dependency</span>&gt;</pre></div>
 
@@ -229,6 +234,7 @@ subscription<span class="pl-k">.</span>unsubscribe();</pre></div>
 
 <ul>
 <li>Michał Zieliński (<a href="mailto:michal.zielinski@polidea.com">michal.zielinski@polidea.com</a>)</li>
+<li>Fracturedpsyche (<a href="https://github.com/fracturedpsyche">https://github.com/fracturedpsyche</a>)</li>
 </ul>
 
 <h2>
